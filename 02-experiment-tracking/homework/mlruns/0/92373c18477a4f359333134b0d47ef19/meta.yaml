@@ -1,0 +1,15 @@
+artifact_uri: file:///workspaces/mlops-training/02-experiment-tracking/homework/mlruns/0/92373c18477a4f359333134b0d47ef19/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 92373c18477a4f359333134b0d47ef19
+run_name: unique-dog-121
+run_uuid: 92373c18477a4f359333134b0d47ef19
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1747767924069
+status: 1
+tags: []
+user_id: codespace

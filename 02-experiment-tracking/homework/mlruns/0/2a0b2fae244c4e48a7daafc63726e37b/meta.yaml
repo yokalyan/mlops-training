@@ -1,0 +1,15 @@
+artifact_uri: file:///workspaces/mlops-training/02-experiment-tracking/homework/mlruns/0/2a0b2fae244c4e48a7daafc63726e37b/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 2a0b2fae244c4e48a7daafc63726e37b
+run_name: youthful-ox-565
+run_uuid: 2a0b2fae244c4e48a7daafc63726e37b
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1747768007939
+status: 1
+tags: []
+user_id: codespace

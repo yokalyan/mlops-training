@@ -1,0 +1,15 @@
+artifact_uri: file:///workspaces/mlops-training/02-experiment-tracking/homework/mlruns/704180015100975705/142b65d98fcb4c0fb96b2be08d89cd30/artifacts
+end_time: 1747774750639
+entry_point_name: ''
+experiment_id: '704180015100975705'
+lifecycle_stage: active
+run_id: 142b65d98fcb4c0fb96b2be08d89cd30
+run_name: loud-rook-673
+run_uuid: 142b65d98fcb4c0fb96b2be08d89cd30
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1747774714302
+status: 3
+tags: []
+user_id: codespace

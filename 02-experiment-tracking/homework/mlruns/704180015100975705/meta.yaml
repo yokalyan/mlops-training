@@ -1,0 +1,6 @@
+artifact_location: file:///workspaces/mlops-training/02-experiment-tracking/homework/mlruns/704180015100975705
+creation_time: 1747770437650
+experiment_id: '704180015100975705'
+last_update_time: 1747770437650
+lifecycle_stage: active
+name: test-experiment

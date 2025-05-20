@@ -1,0 +1,15 @@
+artifact_uri: file:///workspaces/mlops-training/02-experiment-tracking/homework/mlruns/0/36800a4a5508475ab35065b4d919885b/artifacts
+end_time: 1747770031132
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 36800a4a5508475ab35065b4d919885b
+run_name: agreeable-zebra-675
+run_uuid: 36800a4a5508475ab35065b4d919885b
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1747770031103
+status: 3
+tags: []
+user_id: codespace

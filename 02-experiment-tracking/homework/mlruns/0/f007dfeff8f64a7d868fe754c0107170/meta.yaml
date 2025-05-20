@@ -1,0 +1,15 @@
+artifact_uri: file:///workspaces/mlops-training/02-experiment-tracking/homework/mlruns/0/f007dfeff8f64a7d868fe754c0107170/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: f007dfeff8f64a7d868fe754c0107170
+run_name: salty-owl-277
+run_uuid: f007dfeff8f64a7d868fe754c0107170
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1747768291308
+status: 1
+tags: []
+user_id: codespace

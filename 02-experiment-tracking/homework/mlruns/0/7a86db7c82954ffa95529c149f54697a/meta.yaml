@@ -1,0 +1,15 @@
+artifact_uri: file:///workspaces/mlops-training/02-experiment-tracking/homework/mlruns/0/7a86db7c82954ffa95529c149f54697a/artifacts
+end_time: 1747770124417
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 7a86db7c82954ffa95529c149f54697a
+run_name: unruly-hawk-640
+run_uuid: 7a86db7c82954ffa95529c149f54697a
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1747770124380
+status: 3
+tags: []
+user_id: codespace
