@@ -28,7 +28,7 @@ deployments:
     name: Localpool
 - name: XGBoost-prefect-deployment-withS3
   description: Deploying the model with S3 storage 
-  entrypoint: 03-orchestration/homework/duration-prediction.py:main_flow_s3
+  entrypoint: 03-orchestration/homework/duration-prediction-s3.py:main_flow_s3
   work_pool:
     name: Localpool
     
