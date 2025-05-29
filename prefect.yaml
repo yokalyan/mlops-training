@@ -21,12 +21,12 @@ pull:
 deployments:
 - name: XGBoost-prefect-deployment
   description: XGBoost model deployment - local and cloud
-  entrypoint: 03-orchestration/homework/duration-prediction.py:main_flow
+  entrypoint: duration-prediction.py:main_flow
   work_pool:
     name: Localpool
 - name: XGBoost-prefect-deployment-withS3
   description: Deploying the model with S3 storage 
-  entrypoint: 03-orchestration/homework/duration-prediction-s3.py:main_flow_s3
+  entrypoint: duration-prediction-s3.py:main_flow_s3
   work_pool:
     name: Localpool
     
