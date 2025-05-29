@@ -19,6 +19,11 @@ pull:
 
 # the deployments section allows you to provide configuration for deploying flows
 deployments:
+- name: XGBoost-prefect-deployment-cloud
+  description: XGBoost model deployment - cloud
+  entrypoint: 03-orchestration/homework/duration-prediction.py:main_flow
+  work_pool:
+    name: Cloudpool
 - name: XGBoost-prefect-deployment
   description: XGBoost model deployment - local and cloud
   entrypoint: 03-orchestration/homework/duration-prediction.py:main_flow
