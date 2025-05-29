@@ -143,11 +143,11 @@ def main_flow_s3(year, month):
     s3_bucket_block = S3Bucket.load("mlflow-training-bucket")
     if s3_bucket_block is None:
         raise ValueError("S3 bucket block not found. Please create it first.")
-    s3_bucket_block.download_folder_to_path(from_folder="03-orchestration/homework/data", to_folder="03-orchestration/homework/data")  # Download data to local models folder
+    s3_bucket_block.download_folder_to_path(from_folder="data", to_folder="data")  # Download data to local models folder
     print(f"Using S3 bucket: {s3_bucket_block.bucket_name}")
     
-    df_train = read_dataframe(path="03-orchestration/homework/data/green_tripdata_2023-01.parquet")
-    df_val = read_dataframe(path="03-orchestration/homework/data/green_tripdata_2023-02.parquet")
+    df_train = read_dataframe(path="data/green_tripdata_2023-01.parquet")
+    df_val = read_dataframe(path="data/green_tripdata_2023-02.parquet")
  
     X_train, dv = create_X(df_train)
     X_val, _ = create_X(df_val, dv)
