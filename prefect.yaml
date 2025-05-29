@@ -15,18 +15,18 @@ push: null
 # pull section allows you to provide instructions for cloning this project in remote locations
 pull:
 - prefect.deployments.steps.set_working_directory:
-    directory: /workspaces/mlops-training/03-orchestration/homework
+    directory: /workspaces/mlops-training/
 
 # the deployments section allows you to provide configuration for deploying flows
 deployments:
 - name: XGBoost-prefect-deployment
   description: XGBoost model deployment - local and cloud
-  entrypoint: duration-prediction.py:main_flow
+  entrypoint: 03-orchestration/homework/duration-prediction.py:main_flow
   work_pool:
     name: Localpool
 - name: XGBoost-prefect-deployment-withS3
   description: Deploying the model with S3 storage 
-  entrypoint: duration-prediction-s3.py:main_flow_s3
+  entrypoint: 03-orchestration/homework/duration-prediction-s3.py:main_flow_s3
   work_pool:
     name: Localpool
     
