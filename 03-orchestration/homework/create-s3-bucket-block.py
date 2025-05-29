@@ -5,8 +5,8 @@ from prefect import task, flow
 def set_aws_credentials():
     ## Set AWS credentials for S3 access.
     aws_credentials = AwsCredentials(
-        aws_access_key_id="AKIAYYYEULULMRF2VRHW",
-        aws_secret_access_key="PLiuo1LKd1hvgeBvW5rTcBaAccIlBmFkjq5Itf+l" # Replace with your actual secret key
+        aws_access_key_id="test",
+        aws_secret_access_key="test123" # Replace with your actual secret key
     )
     aws_credentials.save("aws-credentials", overwrite=True)  # Save the credentials with a name
     
