@@ -1,29 +1,28 @@
 #!/usr/bin/env python
 # coding: utf-8
+
 from datetime import datetime, timedelta
-from time import sleep
 import pickle
 import argparse     
 from pathlib import Path
 
-import mlflow
-import mlflow.sklearn
 import pandas as pd
+import xgboost as xgb
 
 from sklearn.feature_extraction import DictVectorizer
-from scipy.sparse import vstack  # Used to stack sparse matrices
-from sklearn.feature_extraction import DictVectorizer
 from sklearn.metrics import root_mean_squared_error
-from sklearn.linear_model import LinearRegression
-    
+
+import mlflow
+
 from datetime import date
 from prefect import task, flow
+from prefect.cache_policies import DEFAULT
 from prefect.tasks import task_input_hash
 from prefect.artifacts import create_markdown_artifact, create_link_artifact
 
 # Set up MLflow tracking URI and experiment
 mlflow.set_tracking_uri("sqlite:///mlflow.db")
-mlflow.set_experiment("nyc-taxi-experiment-june2")
+mlflow.set_experiment("nyc-taxi-experiment")
 
 # Create a folder for models if it doesn't exist
 models_folder = Path('models')
@@ -38,98 +37,86 @@ def get_current_year_month():
 @task(name="Read dataframe", retries=3, retry_delay_seconds=5, log_prints=True)
 def read_dataframe(year, month):
     # Read the parquet file for the specified year and month
-    print("Start again")
-    url = f'https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_{year}-{month:02d}.parquet'
+    url = f'https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_{year}-{month:02d}.parquet'
     df = pd.read_parquet(url)
     print(f"Total number of records loaded {df.shape[0]} for month {month}")
           
     # Filter out rows with missing values in the pickup and dropoff datetime columns
-    df['duration'] = df.tpep_dropoff_datetime - df.tpep_pickup_datetime
-    df.duration = df.duration.dt.total_seconds() / 60
-    
+    df['duration'] = df.lpep_dropoff_datetime - df.lpep_pickup_datetime
+    df.duration = df.duration.apply(lambda td: td.total_seconds() / 60)
     # Filter out trips with duration less than 1 minute or more than 60 minutes
     df = df[(df.duration >= 1) & (df.duration <= 60)]
-    print(f"Total number of records after filtering {df.shape[0]} for month {month}")
+
     categorical = ['PULocationID', 'DOLocationID']
     df[categorical] = df[categorical].astype(str)
     
+    # Add a new feature 'PU_DO' that combines pickup and dropoff location IDs
+    df['PU_DO'] = df['PULocationID'] + '_' + df['DOLocationID']
     return df
-
+          
 @task(
     name="Create the DV - check for cached version",
     cache_key_fn=task_input_hash, 
     cache_expiration=timedelta(days=1)
 )
 def create_X(df, dv=None):
-    print("Fit the dict vectorizer and create the design matrix")
-    chunk_size=10000
-    categorical = ['PULocationID', 'DOLocationID']
-    
-    # 2. If DictVectorizer isn't passed, create and fit one
+    categorical = ['PU_DO']
+    numerical = ['trip_distance']
+    dicts = df[categorical + numerical].to_dict(orient='records')
+
     if dv is None:
-        #sample_dicts = df[categorical].iloc[:chunk_size].to_dict(orient='records')
-        sample_dicts = df[categorical].to_dict(orient='records')
         dv = DictVectorizer(sparse=True)
-        dv.fit(sample_dicts)
+        X = dv.fit_transform(dicts)
+    else:
+        X = dv.transform(dicts)
 
-    # 3. Initialize a list to hold each chunk's sparse matrix
-    all_chunks = []
-    # 4. Loop through the DataFrame in chunks
-    for i in range(0, len(df), chunk_size):
-        chunk = df.iloc[i:i + chunk_size]
-
-        # Convert the chunk to list-of-dicts (row-wise) for DictVectorizer
-        dicts = chunk[categorical].to_dict(orient='records')
-
-        # Use the already-fitted DictVectorizer to transform
-        X_chunk = dv.transform(dicts)
-
-        # Store the sparse matrix
-        all_chunks.append(X_chunk)
-
-    # 5. Combine all sparse matrices into one using vstack
-    X = vstack(all_chunks)
-
-    # 6. Return the final design matrix and the vectorizer
     return X, dv
 
-# Not going to use this version as it is crashing on my machine because of memory issues as
-# it tries to load and transform the entire dataset into memory at once. 
-# def create_X(df, dv=None):
-#     categorical = ['PULocationID', 'DOLocationID']
-#     numerical = ['trip_distance']
-    
-#     dicts = df[categorical+numerical].to_dict(orient='records')
-#     if dv is None:
-#         dv = DictVectorizer(sparse=True)
-#         print(dicts[:5])
-#         X = dv.fit_transform(dicts)
-#     else:
-#         X = dv.transform(dicts)
-#     print("Returning from create_X")
-#     return X, dv
-
-@task(name="train_linear_regression_model")
-def train_linear_regression_model(X_train, y_train, X_val, y_val, dv):
-    print("Training linear regression model")
+"""
+Not sure if worth having cached version of this task, since it is expensive and
+not worth running it if the input is the same
+@task(
+    name="Train the model, use the cached version if input is same",
+    cache_key_fn=task_input_hash, 
+    cache_expiration=timedelta(days=1)
+)
+"""
+@task(name="Train the model")
+def train_model(X_train, y_train, X_val, y_val, dv):
+    cache_rmse1 = 10.0  # Initialize with a high value for comparison
     with mlflow.start_run() as run:
-        mlflow.log_param("model_type", "LinearRegression")
-        lr_model = LinearRegression()
-        lr_model.fit(X_train, y_train)
-        
-        y_pred = lr_model.predict(X_val)
-       
-        print("Model intercept:", lr_model.intercept_)
-        mlflow.log_metric("intercept", lr_model.intercept_)
-        
-        rmse = root_mean_squared_error(y_val, y_pred)
-        mlflow.log_metric("rmse", rmse)
-        print(f"RMSE: {rmse}")
+        train = xgb.DMatrix(X_train, label=y_train)
+        valid = xgb.DMatrix(X_val, label=y_val)
 
-        with open('models/lin_reg.bin', 'wb') as f_out:
-            pickle.dump((dv, lr_model), f_out)
+        best_params = {
+            'learning_rate': 0.09585355369315604,
+            'max_depth': 30,
+            'min_child_weight': 1.060597050922164,
+            'objective': 'reg:linear',
+            'reg_alpha': 0.018060244040060163,
+            'reg_lambda': 0.011658731377413597,
+            'seed': 42
+        }
+
+        mlflow.log_params(best_params)
+
+        booster = xgb.train(
+            params=best_params,
+            dtrain=train,
+            num_boost_round=5,
+            evals=[(valid, 'validation')],
+            early_stopping_rounds=5
+        )
+
+        y_pred = booster.predict(valid)
+        rmse = root_mean_squared_error(y_val, y_pred)
         
-        mlflow.log_artifact("models/lin_reg.bin", artifact_path="models")
+        mlflow.log_metric("rmse", rmse)
+
+        with open("models/preprocessor.b", "wb") as f_out:
+            pickle.dump(dv, f_out)
+        mlflow.log_artifact("models/preprocessor.b", artifact_path="preprocessor")
+        
         
         markdown_artifact = f"""
             ###  XGBoost Training Model RMSE
@@ -149,12 +136,8 @@ def train_linear_regression_model(X_train, y_train, X_val, y_val, dv):
             link_text="GitHub Repo:",
             description="We can use this to point to the data source or code version",
         )
-        mlflow.sklearn.log_model(
-            lr_model,
-            artifact_path="model",
-            registered_model_name="nyc-taxi-duration-model"
-        )
-        mlflow.log_param("run_id", run.info.run_id)
+
+        mlflow.xgboost.log_model(booster, artifact_path="models_mlflow")
         return run.info.run_id
 
 # Validate parsed arguments. They can be none when running the flow by scheduler
@@ -189,7 +172,7 @@ def main_flow(year, month):
     next_year = year if month < 12 else year + 1
     next_month = month + 1 if month < 12 else 1
     df_val = read_dataframe(year=next_year, month=next_month)
-    
+
     X_train, dv = create_X(df_train)
     X_val, _ = create_X(df_val, dv)
 
@@ -197,7 +180,7 @@ def main_flow(year, month):
     y_train = df_train[target].values
     y_val = df_val[target].values
 
-    run_id = train_linear_regression_model(X_train, y_train, X_val, y_val, dv)
+    run_id = train_model(X_train, y_train, X_val, y_val, dv)
     print(f"MLflow run_id: {run_id}")
     return run_id
 
