@@ -1,0 +1,33 @@
+FROM python:3.9.21-slim
+
+RUN pip install -U pip
+RUN pip install pipenv
+
+WORKDIR /app
+
+COPY ["Pipfile", "Pipfile.lock", "./"]
+
+RUN pipenv install --system --deploy 
+
+COPY ["lin_reg.bin", "predict.py", "test.py", "./"]
+
+EXPOSE 9696
+
+ENTRYPOINT ["gunicorn", "--bind=0.0.0.0:9696", "predict:app"]
+
+# Use the following command to build the Docker image:
+# docker build -t web-service:v1 .
+# Use the following command to run the Docker container:
+# docker run -d -p 9696:9696 web-service:v1
+# Use the following command to stop the Docker container:
+# docker ps -a  # to find the container ID
+# docker stop <container_id>
+# Use the following command to remove the Docker container:
+# docker rm <container_id>
+# Use the following command to remove the Docker image:
+# docker rmi web-service:latest
+# Use the following command to run the Docker container in interactive mode:
+# docker run -it --rm -p 8000:8000 web-service:latest
+# Use the following command to run the Docker container with a specific name:
+# docker run -d --name web-service-container -p 8000:8000 web-service:latest
+
